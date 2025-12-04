@@ -1,33 +1,15 @@
-# Configuration file with sensitive data (use config.example.json as template)
-config.json
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
 venv/
-ENV/
 env/
 .venv/
+
+# Logs
+logs/*.log
 
 # IDE
 .idea/
@@ -35,9 +17,9 @@ env/
 *.swp
 *.swo
 
-# Logs
-*.log
-
 # OS
 .DS_Store
 Thumbs.db
+
+# Sensitive configs (uncomment if you want to exclude)
+# config/email_config.json
