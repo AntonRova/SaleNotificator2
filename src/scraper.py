@@ -1,40 +1,74 @@
 import re
-import requests
+import time
+import warnings
+import cloudscraper
 from bs4 import BeautifulSoup
 from typing import Optional
+from requests.exceptions import RequestException
+from urllib.parse import urlparse
+from urllib3.exceptions import InsecureRequestWarning
+
+# Suppress SSL warnings when verification is disabled
+warnings.simplefilter('ignore', InsecureRequestWarning)
 
 
 class PriceScraper:
     """Scrapes prices from product pages."""
 
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Language': 'en-NZ,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Cache-Control': 'max-age=0',
-    }
-
-    def __init__(self, timeout: int = 30):
+    def __init__(self, timeout: int = 30, delay: float = 2.0):
         self.timeout = timeout
-        self.session = requests.Session()
-        self.session.headers.update(self.HEADERS)
+        self.delay = delay
+        self.last_request_time = 0
+        # cloudscraper automatically handles Cloudflare challenges
+        # and sets appropriate headers
+        self.session = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            },
+            delay=10  # Delay between solving challenges
+        )
+        # Disable SSL verification globally for this session
+        self.session.verify = False
 
-    def fetch_page(self, url: str) -> Optional[str]:
-        """Fetch the HTML content of a page."""
-        try:
-            response = self.session.get(url, timeout=self.timeout)
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
-            raise ScraperError(f"Failed to fetch {url}: {e}")
+    def _rate_limit(self):
+        """Ensure minimum delay between requests."""
+        if self.last_request_time > 0:
+            elapsed = time.time() - self.last_request_time
+            if elapsed < self.delay:
+                time.sleep(self.delay - elapsed)
+        self.last_request_time = time.time()
+
+    def fetch_page(self, url: str, retries: int = 3) -> Optional[str]:
+        """Fetch the HTML content of a page with retry logic."""
+        self._rate_limit()
+
+        for attempt in range(retries):
+            try:
+                # On first attempt for a domain, visit homepage first to get cookies
+                if attempt == 0:
+                    parsed = urlparse(url)
+                    homepage = f"{parsed.scheme}://{parsed.netloc}"
+                    try:
+                        self.session.get(homepage, timeout=self.timeout)
+                        time.sleep(1)  # Brief pause after homepage visit
+                    except:
+                        pass  # Ignore homepage errors, try the actual URL anyway
+
+                response = self.session.get(url, timeout=self.timeout)
+                response.raise_for_status()
+                return response.text
+
+            except RequestException as e:
+                if attempt < retries - 1:
+                    # Exponential backoff
+                    wait_time = (attempt + 1) * 2
+                    time.sleep(wait_time)
+                else:
+                    raise ScraperError(f"Failed to fetch {url}: {e}")
+
+        return None
 
     def extract_price(self, html: str, css_selector: str) -> Optional[float]:
         """Extract price from HTML using CSS selector."""
