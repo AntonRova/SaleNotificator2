@@ -10,19 +10,27 @@ from requests.adapters import HTTPAdapter
 from urllib.parse import urlparse
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3.poolmanager import PoolManager
+import urllib3
 
-# Suppress SSL warnings when verification is disabled
-warnings.simplefilter('ignore', InsecureRequestWarning)
+# Disable SSL warnings globally
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings('ignore', category=InsecureRequestWarning)
 
 
 class SSLAdapter(HTTPAdapter):
-    """Custom adapter to handle SSL verification issues."""
+    """Custom adapter to bypass SSL verification."""
     def init_poolmanager(self, *args, **kwargs):
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         kwargs['ssl_context'] = context
+        kwargs['cert_reqs'] = ssl.CERT_NONE
+        kwargs['assert_hostname'] = False
         return super().init_poolmanager(*args, **kwargs)
+
+    def cert_verify(self, conn, url, verify, cert):
+        """Override to disable certificate verification."""
+        super().cert_verify(conn, url, verify=False, cert=cert)
 
 
 class PriceScraper:
@@ -42,6 +50,9 @@ class PriceScraper:
             },
             delay=10  # Delay between solving challenges
         )
+        # Disable SSL verification at session level
+        self.session.verify = False
+
         # Mount custom SSL adapter for both http and https
         adapter = SSLAdapter()
         self.session.mount('https://', adapter)
@@ -66,12 +77,13 @@ class PriceScraper:
                     parsed = urlparse(url)
                     homepage = f"{parsed.scheme}://{parsed.netloc}"
                     try:
-                        self.session.get(homepage, timeout=self.timeout)
+                        self.session.get(homepage, timeout=self.timeout, verify=False)
                         time.sleep(1)  # Brief pause after homepage visit
                     except:
                         pass  # Ignore homepage errors, try the actual URL anyway
 
-                response = self.session.get(url, timeout=self.timeout)
+                # Explicitly pass verify=False to bypass SSL verification
+                response = self.session.get(url, timeout=self.timeout, verify=False)
                 response.raise_for_status()
                 return response.text
 
