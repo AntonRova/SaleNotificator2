@@ -1,15 +1,28 @@
 import re
 import time
+import ssl
 import warnings
 import cloudscraper
 from bs4 import BeautifulSoup
 from typing import Optional
 from requests.exceptions import RequestException
+from requests.adapters import HTTPAdapter
 from urllib.parse import urlparse
 from urllib3.exceptions import InsecureRequestWarning
+from urllib3.poolmanager import PoolManager
 
 # Suppress SSL warnings when verification is disabled
 warnings.simplefilter('ignore', InsecureRequestWarning)
+
+
+class SSLAdapter(HTTPAdapter):
+    """Custom adapter to handle SSL verification issues."""
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        kwargs['ssl_context'] = context
+        return super().init_poolmanager(*args, **kwargs)
 
 
 class PriceScraper:
@@ -29,8 +42,10 @@ class PriceScraper:
             },
             delay=10  # Delay between solving challenges
         )
-        # Disable SSL verification globally for this session
-        self.session.verify = False
+        # Mount custom SSL adapter for both http and https
+        adapter = SSLAdapter()
+        self.session.mount('https://', adapter)
+        self.session.mount('http://', adapter)
 
     def _rate_limit(self):
         """Ensure minimum delay between requests."""
