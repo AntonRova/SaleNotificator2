@@ -70,27 +70,42 @@ class PriceScraper:
         """Fetch the HTML content of a page with retry logic."""
         self._rate_limit()
 
+        parsed = urlparse(url)
+        is_pbtech = 'pbtech.co.nz' in parsed.netloc
+
         for attempt in range(retries):
             try:
                 # On first attempt for a domain, visit homepage first to get cookies
                 if attempt == 0:
-                    parsed = urlparse(url)
                     homepage = f"{parsed.scheme}://{parsed.netloc}"
                     try:
                         self.session.get(homepage, timeout=self.timeout, verify=False)
-                        time.sleep(1)  # Brief pause after homepage visit
+                        # Longer delay for PBTech to appear more human-like
+                        time.sleep(3 if is_pbtech else 1)
                     except:
                         pass  # Ignore homepage errors, try the actual URL anyway
 
+                # Prepare headers with referer for more realistic requests
+                headers = {
+                    'Referer': f"{parsed.scheme}://{parsed.netloc}/",
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-NZ,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                }
+
                 # Explicitly pass verify=False to bypass SSL verification
-                response = self.session.get(url, timeout=self.timeout, verify=False)
+                response = self.session.get(
+                    url,
+                    timeout=self.timeout,
+                    verify=False,
+                    headers=headers
+                )
                 response.raise_for_status()
                 return response.text
 
             except RequestException as e:
                 if attempt < retries - 1:
-                    # Exponential backoff
-                    wait_time = (attempt + 1) * 2
+                    # Longer exponential backoff for PBTech
+                    wait_time = (attempt + 1) * (5 if is_pbtech else 2)
                     time.sleep(wait_time)
                 else:
                     raise ScraperError(f"Failed to fetch {url}: {e}")
