@@ -2,6 +2,7 @@ import re
 import time
 import ssl
 import warnings
+import random
 import cloudscraper
 from bs4 import BeautifulSoup
 from typing import Optional
@@ -75,22 +76,35 @@ class PriceScraper:
 
         for attempt in range(retries):
             try:
-                # On first attempt for a domain, visit homepage first to get cookies
-                if attempt == 0:
+                # For PBTech, use more sophisticated approach
+                if is_pbtech and attempt == 0:
+                    # Visit homepage to get cookies and establish session
                     homepage = f"{parsed.scheme}://{parsed.netloc}"
                     try:
+                        # Add random delay to appear more human (2-5 seconds)
+                        time.sleep(random.uniform(2.0, 5.0))
                         self.session.get(homepage, timeout=self.timeout, verify=False)
-                        # Longer delay for PBTech to appear more human-like
-                        time.sleep(3 if is_pbtech else 1)
+                        # Random delay after homepage
+                        time.sleep(random.uniform(2.0, 4.0))
                     except:
-                        pass  # Ignore homepage errors, try the actual URL anyway
+                        pass
 
-                # Prepare headers with referer for more realistic requests
+                # Prepare more realistic headers (don't set Accept-Encoding, let cloudscraper handle it)
                 headers = {
                     'Referer': f"{parsed.scheme}://{parsed.netloc}/",
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                     'Accept-Language': 'en-NZ,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'DNT': '1',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
                 }
+
+                # For PBTech, add a small random delay before request
+                if is_pbtech:
+                    time.sleep(random.uniform(0.5, 1.5))
 
                 # Explicitly pass verify=False to bypass SSL verification
                 response = self.session.get(
@@ -104,8 +118,12 @@ class PriceScraper:
 
             except RequestException as e:
                 if attempt < retries - 1:
-                    # Longer exponential backoff for PBTech
-                    wait_time = (attempt + 1) * (5 if is_pbtech else 2)
+                    # Randomized exponential backoff for PBTech
+                    if is_pbtech:
+                        base_wait = (attempt + 1) * 5
+                        wait_time = random.uniform(base_wait, base_wait + 3)
+                    else:
+                        wait_time = (attempt + 1) * 2
                     time.sleep(wait_time)
                 else:
                     raise ScraperError(f"Failed to fetch {url}: {e}")
