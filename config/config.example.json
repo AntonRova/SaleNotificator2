@@ -1,0 +1,49 @@
+{
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "your_email@gmail.com",
+    "sender_password": "your_app_password",
+    "recipient_email": "recipient@example.com",
+    "use_tls": true
+  },
+  "schedule": {
+    "enabled": true,
+    "cron": "0 * * * *",
+    "timezone": "America/New_York",
+    "run_on_startup": true,
+    "description": "Every hour at minute 0"
+  },
+  "tracked_items": [
+    {
+      "name": "Example Product Name",
+      "url": "https://example.com/product-url",
+      "parameter": "price",
+      "css_selector": ".price, .product-price",
+      "threshold": 100.00,
+      "currency": "USD",
+      "enabled": true
+    },
+    {
+      "name": "Another Example Product",
+      "url": "https://example.com/another-product",
+      "parameter": "price",
+      "css_selector": ".our-price, [data-price]",
+      "threshold": 50.00,
+      "currency": "USD",
+      "enabled": false
+    }
+  ],
+  "_schedule_examples": {
+    "every_hour": "0 * * * *",
+    "every_30_minutes": "*/30 * * * *",
+    "every_2_hours": "0 */2 * * *",
+    "every_6_hours": "0 */6 * * *",
+    "daily_at_9am": "0 9 * * *",
+    "twice_daily": "0 9,21 * * *",
+    "weekdays_9am": "0 9 * * 1-5",
+    "every_monday_10am": "0 10 * * 1"
+  },
+  "_cron_format": "minute hour day_of_month month day_of_week",
+  "_cron_help": "See https://crontab.guru for help with cron expressions"
+}
