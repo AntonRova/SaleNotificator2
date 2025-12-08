@@ -1,6 +1,7 @@
 # SaleNotificator2
 
 
+
 A Docker-based price tracking and notification system that monitors product prices and sends email alerts when prices drop below configured thresholds.
 
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://github.com/AntonRova/SaleNotificator2)
