@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  price-notificator:
+    build: .
+    container_name: sale-notificator
+    restart: unless-stopped
+
+    volumes:
+      # Mount your config directory (READ-ONLY for security)
+      # Update the path on the left side to match your TrueNAS dataset path
+      #
+      # Config file options:
+      #   1. Unified config (RECOMMENDED): config.json
+      #      - Includes email, tracked items, AND schedule settings
+      #      - Change schedule without rebuilding: just edit config.json
+      #      - See config.example.json for format
+      #
+      #   2. Legacy config (BACKWARD COMPATIBLE):
+      #      - tracked_items.json + email_config.json
+      #      - Schedule defaults to hourly (cannot be customized)
+      - /mnt/your-pool/apps/sale-notificator/config:/app/config:ro
+
+      # Mount logs directory (WRITABLE)
+      - /mnt/your-pool/apps/sale-notificator/logs:/app/logs
+
+    environment:
+      # Timezone for accurate logging (adjust to your timezone)
+      # This should match the timezone in your config.json schedule section
+      - TZ=America/New_York
+
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: create named volumes instead of host paths
+# Uncomment below if you prefer Docker-managed volumes
+#volumes:
+#  config:
+#  logs:

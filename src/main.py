@@ -23,6 +23,8 @@ BASE_DIR = Path(__file__).parent.parent
 CONFIG_DIR = BASE_DIR / 'config'
 LOGS_DIR = BASE_DIR / 'logs'
 
+# Config files - unified config takes precedence
+CONFIG_FILE = CONFIG_DIR / 'config.json'
 TRACKED_ITEMS_FILE = CONFIG_DIR / 'tracked_items.json'
 EMAIL_CONFIG_FILE = CONFIG_DIR / 'email_config.json'
 
@@ -71,11 +73,42 @@ def load_json_config(path: Path) -> Dict:
         return json.load(f)
 
 
+def load_unified_config() -> Dict:
+    """
+    Load configuration from unified config.json or fallback to legacy files.
+
+    Returns a dict with keys: 'email', 'tracked_items', 'schedule' (if available)
+    """
+    # Try unified config first
+    if CONFIG_FILE.exists():
+        config = load_json_config(CONFIG_FILE)
+        # Ensure tracked_items is a list
+        if 'tracked_items' not in config:
+            config['tracked_items'] = []
+        return config
+
+    # Fallback to legacy config files
+    config = {}
+
+    # Load tracked items
+    if TRACKED_ITEMS_FILE.exists():
+        tracked_data = load_json_config(TRACKED_ITEMS_FILE)
+        config['tracked_items'] = tracked_data.get('items', [])
+    else:
+        config['tracked_items'] = []
+
+    # Load email config
+    if EMAIL_CONFIG_FILE.exists():
+        config['email'] = load_json_config(EMAIL_CONFIG_FILE)
+
+    return config
+
+
 def check_prices(logger: logging.Logger) -> List[Dict]:
     """Check all tracked items and return those below threshold."""
-    # Load tracked items
-    tracked_config = load_json_config(TRACKED_ITEMS_FILE)
-    items = tracked_config.get('items', [])
+    # Load configuration (unified or legacy)
+    config = load_unified_config()
+    items = config.get('tracked_items', [])
 
     scraper = PriceScraper()
     alerts = []
@@ -130,12 +163,20 @@ def send_notifications(alerts: List[Dict], logger: logging.Logger) -> bool:
         return True
 
     try:
-        email_config = load_json_config(EMAIL_CONFIG_FILE)
+        # Load configuration (unified or legacy)
+        config = load_unified_config()
+
+        # Get email config
+        email_config = config.get('email')
+        if not email_config:
+            logger.error("Email configuration not found in config")
+            logger.info(f"Would have sent {len(alerts)} alert(s)")
+            return False
 
         # Check if email is configured
-        if email_config['sender_email'] == 'your_email@gmail.com':
+        if email_config.get('sender_email') == 'your_email@gmail.com':
             logger.warning(
-                "Email not configured. Please update config/email_config.json"
+                "Email not configured. Please update your config file"
             )
             logger.info(f"Would have sent {len(alerts)} alert(s)")
             return False
