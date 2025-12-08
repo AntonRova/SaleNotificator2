@@ -18,24 +18,33 @@ This guide uses the **pre-built Docker image** from GitHub Container Registry.
 
 ## Step 1: Create Datasets (TrueNAS Web UI)
 
-### 1.1 Create Config Dataset
+### 1.1 Create Parent Dataset
 
 1. Go to **Storage** → **Datasets**
 2. Click **Add Dataset**
-   - **Name**: `sale-notificator-config`
+   - **Name**: `sale-notificator`
    - **Dataset Preset**: `Generic`
    - Click **Save**
 
-### 1.2 Create Logs Dataset
+### 1.2 Create Config Subdataset
 
-1. Click **Add Dataset** again
-   - **Name**: `sale-notificator-logs`
+1. Click on the `sale-notificator` dataset you just created
+2. Click **Add Dataset**
+   - **Name**: `config`
    - **Dataset Preset**: `Generic`
    - Click **Save**
 
-**Result:** You now have:
-- `/mnt/your-pool/sale-notificator-config`
-- `/mnt/your-pool/sale-notificator-logs`
+### 1.3 Create Logs Subdataset
+
+1. With `sale-notificator` still selected, click **Add Dataset** again
+   - **Name**: `logs`
+   - **Dataset Preset**: `Generic`
+   - Click **Save**
+
+**Result:** You now have a nested structure:
+- `/mnt/your-pool/sale-notificator/` (parent)
+- `/mnt/your-pool/sale-notificator/config/` (child)
+- `/mnt/your-pool/sale-notificator/logs/` (child)
 
 ---
 
@@ -49,7 +58,7 @@ Click the Shell icon (top right), then run:
 
 ```bash
 # Download example config
-curl -o /mnt/your-pool/sale-notificator-config/config.json \
+curl -o /mnt/your-pool/sale-notificator/config/config.json \
   https://raw.githubusercontent.com/AntonRova/SaleNotificator2/claude/docker-truenas-setup-0144QCmGtmmnf5Syv1GLrYbi/config/config.example.json
 ```
 
@@ -57,7 +66,7 @@ curl -o /mnt/your-pool/sale-notificator-config/config.json \
 
 In TrueNAS Shell:
 ```bash
-nano /mnt/your-pool/sale-notificator-config/config.json
+nano /mnt/your-pool/sale-notificator/config/config.json
 ```
 
 Paste this content:
@@ -98,7 +107,7 @@ Save with `Ctrl+O`, `Enter`, then `Ctrl+X`
 
 Still in TrueNAS Shell:
 ```bash
-nano /mnt/your-pool/sale-notificator-config/config.json
+nano /mnt/your-pool/sale-notificator/config/config.json
 ```
 
 **Update these values:**
@@ -121,7 +130,7 @@ nano /mnt/your-pool/sale-notificator-config/config.json
 ### 2.3 Secure the File
 
 ```bash
-chmod 600 /mnt/your-pool/sale-notificator-config/config.json
+chmod 600 /mnt/your-pool/sale-notificator/config/config.json
 ```
 
 ---
@@ -171,7 +180,7 @@ Click **Add** under "Host Path Volumes" **TWICE**:
 **Volume 1: Config (Read-Only)**
 ```
 Type: Host Path
-Host Path: /mnt/your-pool/sale-notificator-config
+Host Path: /mnt/your-pool/sale-notificator/config
 Mount Path: /app/config
 ☑ Read Only: CHECKED
 ```
@@ -179,7 +188,7 @@ Mount Path: /app/config
 **Volume 2: Logs (Writable)**
 ```
 Type: Host Path
-Host Path: /mnt/your-pool/sale-notificator-logs
+Host Path: /mnt/your-pool/sale-notificator/logs
 Mount Path: /app/logs
 ☐ Read Only: UNCHECKED
 ```
@@ -257,7 +266,7 @@ Time until next check: 1h 30m
 
 In TrueNAS Shell:
 ```bash
-ls -lh /mnt/your-pool/sale-notificator-logs/
+ls -lh /mnt/your-pool/sale-notificator/logs/
 ```
 
 You should see:
@@ -267,7 +276,7 @@ price_checks_2024-12.log
 
 View it:
 ```bash
-tail -f /mnt/your-pool/sale-notificator-logs/*.log
+tail -f /mnt/your-pool/sale-notificator/logs/*.log
 ```
 
 ---
@@ -284,7 +293,7 @@ Your price tracker is now running and will check prices at **9 AM and 5 PM** eve
 
 1. Edit config:
    ```bash
-   nano /mnt/your-pool/sale-notificator-config/config.json
+   nano /mnt/your-pool/sale-notificator/config/config.json
    ```
 
 2. Change the `cron` value:
@@ -306,7 +315,7 @@ Your price tracker is now running and will check prices at **9 AM and 5 PM** eve
 
 1. Edit config:
    ```bash
-   nano /mnt/your-pool/sale-notificator-config/config.json
+   nano /mnt/your-pool/sale-notificator/config/config.json
    ```
 
 2. Add to the `tracked_items` array:
@@ -378,13 +387,13 @@ docker logs sale-notificator
 **Common issues:**
 1. **Invalid JSON in config:**
    ```bash
-   cat /mnt/your-pool/sale-notificator-config/config.json | python3 -m json.tool
+   cat /mnt/your-pool/sale-notificator/config/config.json | python3 -m json.tool
    ```
    If you see an error, fix the JSON syntax
 
 2. **Config file not found:**
    ```bash
-   ls -la /mnt/your-pool/sale-notificator-config/config.json
+   ls -la /mnt/your-pool/sale-notificator/config/config.json
    ```
    Make sure it exists
 
@@ -423,10 +432,11 @@ docker logs sale-notificator
 
 ```
 /mnt/your-pool/
-├── sale-notificator-config/
-│   └── config.json              # Your configuration
-└── sale-notificator-logs/
-    └── price_checks_2024-12.log # Monthly logs
+└── sale-notificator/            # Parent dataset
+    ├── config/                  # Config subdataset
+    │   └── config.json          # Your configuration
+    └── logs/                    # Logs subdataset
+        └── price_checks_2024-12.log  # Monthly logs
 ```
 
 ---
