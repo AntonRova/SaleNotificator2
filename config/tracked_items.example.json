@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "name": "Example Product Name",
+      "url": "https://example.com/product-url",
+      "parameter": "price",
+      "css_selector": ".price, .product-price",
+      "threshold": 100.00,
+      "currency": "USD",
+      "enabled": true
+    },
+    {
+      "name": "Another Example Product",
+      "url": "https://example.com/another-product",
+      "parameter": "price",
+      "css_selector": ".our-price, [data-price]",
+      "threshold": 50.00,
+      "currency": "USD",
+      "enabled": false
+    }
+  ]
+}

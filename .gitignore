@@ -12,7 +12,8 @@ env/
 logs/*.log
 
 # Config folder (contains sensitive data)
-config/
+config/*
+!config/*.example.json
 
 # IDE
 .idea/
