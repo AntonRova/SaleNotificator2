@@ -11,6 +11,9 @@ env/
 # Logs
 logs/*.log
 
+# Config folder (contains sensitive data)
+config/
+
 # IDE
 .idea/
 .vscode/
@@ -20,6 +23,3 @@ logs/*.log
 # OS
 .DS_Store
 Thumbs.db
-
-# Sensitive configs (uncomment if you want to exclude)
-# config/email_config.json
