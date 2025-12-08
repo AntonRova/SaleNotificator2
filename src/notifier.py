@@ -66,6 +66,7 @@ This is an automated message from SaleNotificator.
             msg['From'] = self.sender_email
             msg['To'] = self.recipient_email
             msg['Subject'] = subject
+            msg['Reply-To'] = self.sender_email  # Set reply-to to sender
             msg.attach(MIMEText(body, 'plain'))
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
