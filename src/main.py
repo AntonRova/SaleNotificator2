@@ -25,7 +25,14 @@ LOGS_DIR = BASE_DIR / 'logs'
 
 TRACKED_ITEMS_FILE = CONFIG_DIR / 'tracked_items.json'
 EMAIL_CONFIG_FILE = CONFIG_DIR / 'email_config.json'
-LOG_FILE = LOGS_DIR / 'price_checks.log'
+
+
+def get_monthly_log_file() -> Path:
+    """Generate log file path with year-month in the filename."""
+    current_date = datetime.now()
+    year_month = current_date.strftime('%Y-%m')
+    log_filename = f'price_checks_{year_month}.log'
+    return LOGS_DIR / log_filename
 
 
 def setup_logging() -> logging.Logger:
@@ -35,8 +42,9 @@ def setup_logging() -> logging.Logger:
     logger = logging.getLogger('SaleNotificator')
     logger.setLevel(logging.INFO)
 
-    # File handler
-    file_handler = logging.FileHandler(LOG_FILE)
+    # File handler with monthly log rotation
+    log_file = get_monthly_log_file()
+    file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
 
     # Console handler
