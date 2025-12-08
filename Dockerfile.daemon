@@ -1,0 +1,39 @@
+# Alternative Dockerfile using Python-based scheduling
+# This version uses environment variables to control check interval instead of cron
+#
+# Usage:
+#   docker build -f Dockerfile.daemon -t sale-notificator:daemon .
+#   docker run -e CHECK_INTERVAL_SECONDS=3600 sale-notificator:daemon
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source code
+COPY src/ src/
+COPY config.py .
+
+# Create necessary directories
+RUN mkdir -p /app/config /app/logs && \
+    chmod 755 /app/logs
+
+# Environment variables
+# CHECK_INTERVAL_SECONDS: How often to check prices (default: 3600 = 1 hour)
+ENV CHECK_INTERVAL_SECONDS=3600
+
+# Expose volumes for configuration and logs
+VOLUME ["/app/config", "/app/logs"]
+
+# Health check (ensure the scheduler is running)
+HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
+    CMD pgrep -f scheduler.py || exit 1
+
+# Run the scheduler daemon
+CMD ["python3", "-u", "src/scheduler.py"]
