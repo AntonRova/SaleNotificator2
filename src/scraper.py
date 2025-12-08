@@ -67,6 +67,27 @@ class PriceScraper:
                 time.sleep(self.delay - elapsed)
         self.last_request_time = time.time()
 
+    def _warmup_pbtech_session(self, homepage: str):
+        """Build a realistic browsing session for PBTech before accessing product."""
+        try:
+            # Visit homepage first
+            time.sleep(random.uniform(1.0, 2.0))
+            self.session.get(homepage, timeout=self.timeout, verify=False)
+            time.sleep(random.uniform(1.5, 3.0))
+
+            # Visit a category page to look more human
+            category_urls = [
+                f"{homepage}/computers",
+                f"{homepage}/components",
+                f"{homepage}/peripherals"
+            ]
+            category = random.choice(category_urls)
+            self.session.get(category, timeout=self.timeout, verify=False)
+            time.sleep(random.uniform(1.0, 2.5))
+        except:
+            # If warmup fails, continue anyway
+            pass
+
     def fetch_page(self, url: str, retries: int = 3) -> Optional[str]:
         """Fetch the HTML content of a page with retry logic."""
         self._rate_limit()
@@ -76,20 +97,12 @@ class PriceScraper:
 
         for attempt in range(retries):
             try:
-                # For PBTech, use more sophisticated approach
+                # For PBTech, build a realistic session on first attempt
                 if is_pbtech and attempt == 0:
-                    # Visit homepage to get cookies and establish session
                     homepage = f"{parsed.scheme}://{parsed.netloc}"
-                    try:
-                        # Add random delay to appear more human (2-5 seconds)
-                        time.sleep(random.uniform(2.0, 5.0))
-                        self.session.get(homepage, timeout=self.timeout, verify=False)
-                        # Random delay after homepage
-                        time.sleep(random.uniform(2.0, 4.0))
-                    except:
-                        pass
+                    self._warmup_pbtech_session(homepage)
 
-                # Prepare more realistic headers (don't set Accept-Encoding, let cloudscraper handle it)
+                # Prepare more realistic headers
                 headers = {
                     'Referer': f"{parsed.scheme}://{parsed.netloc}/",
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -100,6 +113,9 @@ class PriceScraper:
                     'Sec-Fetch-Mode': 'navigate',
                     'Sec-Fetch-Site': 'same-origin',
                     'Sec-Fetch-User': '?1',
+                    'Sec-CH-UA': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'Sec-CH-UA-Mobile': '?0',
+                    'Sec-CH-UA-Platform': '"Windows"',
                 }
 
                 # For PBTech, add a small random delay before request
