@@ -23,10 +23,8 @@ BASE_DIR = Path(__file__).parent.parent
 CONFIG_DIR = BASE_DIR / 'config'
 LOGS_DIR = BASE_DIR / 'logs'
 
-# Config files - unified config takes precedence
+# Config file
 CONFIG_FILE = CONFIG_DIR / 'config.json'
-TRACKED_ITEMS_FILE = CONFIG_DIR / 'tracked_items.json'
-EMAIL_CONFIG_FILE = CONFIG_DIR / 'email_config.json'
 
 
 def get_monthly_log_file() -> Path:
@@ -73,41 +71,31 @@ def load_json_config(path: Path) -> Dict:
         return json.load(f)
 
 
-def load_unified_config() -> Dict:
+def load_config() -> Dict:
     """
-    Load configuration from unified config.json or fallback to legacy files.
+    Load configuration from config.json.
 
     Returns a dict with keys: 'email', 'tracked_items', 'schedule' (if available)
     """
-    # Try unified config first
-    if CONFIG_FILE.exists():
-        config = load_json_config(CONFIG_FILE)
-        # Ensure tracked_items is a list
-        if 'tracked_items' not in config:
-            config['tracked_items'] = []
-        return config
+    if not CONFIG_FILE.exists():
+        raise FileNotFoundError(
+            f"Configuration file not found: {CONFIG_FILE}\n"
+            f"Please create config.json based on config.example.json"
+        )
 
-    # Fallback to legacy config files
-    config = {}
+    config = load_json_config(CONFIG_FILE)
 
-    # Load tracked items
-    if TRACKED_ITEMS_FILE.exists():
-        tracked_data = load_json_config(TRACKED_ITEMS_FILE)
-        config['tracked_items'] = tracked_data.get('items', [])
-    else:
+    # Ensure tracked_items is a list
+    if 'tracked_items' not in config:
         config['tracked_items'] = []
-
-    # Load email config
-    if EMAIL_CONFIG_FILE.exists():
-        config['email'] = load_json_config(EMAIL_CONFIG_FILE)
 
     return config
 
 
 def check_prices(logger: logging.Logger) -> List[Dict]:
     """Check all tracked items and return those below threshold."""
-    # Load configuration (unified or legacy)
-    config = load_unified_config()
+    # Load configuration
+    config = load_config()
     items = config.get('tracked_items', [])
 
     scraper = PriceScraper()
@@ -163,13 +151,13 @@ def send_notifications(alerts: List[Dict], logger: logging.Logger) -> bool:
         return True
 
     try:
-        # Load configuration (unified or legacy)
-        config = load_unified_config()
+        # Load configuration
+        config = load_config()
 
         # Get email config
         email_config = config.get('email')
         if not email_config:
-            logger.error("Email configuration not found in config")
+            logger.error("Email configuration not found in config.json")
             logger.info(f"Would have sent {len(alerts)} alert(s)")
             return False
 

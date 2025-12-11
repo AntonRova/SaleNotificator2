@@ -14,9 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 COPY config.py .
 
-# Copy example config files to templates directory
+# Copy example config file to templates directory
 COPY config/config.example.json /app/templates/
-COPY config/tracked_items.example.json /app/templates/
 
 # Create necessary directories
 RUN mkdir -p /app/config /app/logs /app/templates && \
@@ -32,12 +31,11 @@ echo "Logs directory: /app/logs"\n\
 echo ""\n\
 \n\
 # Auto-deploy template config if no config exists\n\
-if [ ! -f "/app/config/config.json" ] && [ ! -f "/app/config/tracked_items.json" ]; then\n\
-    echo "No configuration found. Deploying template config files..."\n\
+if [ ! -f "/app/config/config.json" ]; then\n\
+    echo "No configuration found. Deploying template config.json..."\n\
     cp /app/templates/config.example.json /app/config/config.json\n\
-    cp /app/templates/tracked_items.example.json /app/config/tracked_items.json\n\
     echo ""\n\
-    echo "✓ Template configuration files deployed to /app/config/"\n\
+    echo "✓ Template configuration file deployed to /app/config/config.json"\n\
     echo ""\n\
     echo "IMPORTANT: Edit /app/config/config.json with your settings:"\n\
     echo "  - Email SMTP settings"\n\
@@ -46,29 +44,9 @@ if [ ! -f "/app/config/config.json" ] && [ ! -f "/app/config/tracked_items.json"
     echo ""\n\
     echo "After editing config, restart the container."\n\
     echo ""\n\
-fi\n\
-\n\
-# Check if unified config exists\n\
-if [ -f "/app/config/config.json" ]; then\n\
-    echo "✓ Found unified config.json"\n\
-    echo "  Schedule will be read from config.json"\n\
-    echo ""\n\
-elif [ -f "/app/config/tracked_items.json" ] && [ -f "/app/config/email_config.json" ]; then\n\
-    echo "✓ Found legacy config files (tracked_items.json + email_config.json)"\n\
-    echo "  WARNING: Schedule control requires unified config.json"\n\
-    echo "  Using default hourly schedule (0 * * * *)"\n\
-    echo "  Consider migrating to config.json for schedule customization"\n\
-    echo ""\n\
 else\n\
-    echo "ERROR: Configuration files not found!"\n\
+    echo "✓ Found config.json"\n\
     echo ""\n\
-    echo "Please provide ONE of the following:"\n\
-    echo "  1. Unified config:  /app/config/config.json (recommended)"\n\
-    echo "  2. Legacy configs:  /app/config/tracked_items.json"\n\
-    echo "                      /app/config/email_config.json"\n\
-    echo ""\n\
-    echo "See config.example.json for the unified config format"\n\
-    exit 1\n\
 fi\n\
 \n\
 # Start the scheduler daemon\n\

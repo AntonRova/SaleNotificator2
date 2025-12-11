@@ -176,9 +176,7 @@ SaleNotificator2/
 │   └── workflows/
 │       └── docker-build.yml       # GitHub Actions CI/CD
 ├── config/
-│   ├── config.example.json        # Unified config template (recommended)
-│   ├── email_config.example.json  # Legacy email config
-│   └── tracked_items.example.json # Legacy tracked items
+│   └── config.example.json        # Configuration template
 ├── src/
 │   ├── main.py                    # Price checker (one-time run)
 │   ├── scheduler.py               # Scheduler daemon (continuous)

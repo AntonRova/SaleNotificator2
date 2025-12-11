@@ -10,15 +10,10 @@ services:
       # Mount your config directory (READ-ONLY for security)
       # Update the path on the left side to match your TrueNAS dataset path
       #
-      # Config file options:
-      #   1. Unified config (RECOMMENDED): config.json
-      #      - Includes email, tracked items, AND schedule settings
-      #      - Change schedule without rebuilding: just edit config.json
-      #      - See config.example.json for format
-      #
-      #   2. Legacy config (BACKWARD COMPATIBLE):
-      #      - tracked_items.json + email_config.json
-      #      - Schedule defaults to hourly (cannot be customized)
+      # Config file: config.json
+      #   - Includes email, tracked items, AND schedule settings
+      #   - Change schedule without rebuilding: just edit config.json
+      #   - See config.example.json for format
       - /mnt/your-pool/apps/sale-notificator/config:/app/config:ro
 
       # Mount logs directory (WRITABLE)
