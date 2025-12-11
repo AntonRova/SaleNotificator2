@@ -322,13 +322,18 @@ Version: 1.0.0
 ```
 Image Repository: ghcr.io/antonrova/salenotificator2
 Image Tag: latest
-Image Pull Policy: Always
+Image Pull Policy: If not present
 ```
 
+**Pull Policy Options:**
+- **If not present** (Recommended): Only download if image doesn't exist locally. Updates only when you manually trigger them. Best for stable operation.
+- **Always**: Auto-download latest image on every restart. Good for development/testing, but may cause unexpected updates in production.
+- **Never**: Never download, always use local cache only.
+
 **Important:**
-- Type this **exactly** as shown
-- Include the full path: `ghcr.io/antonrova/salenotificator2`
+- Type the repository **exactly** as shown: `ghcr.io/antonrova/salenotificator2`
 - Tag is just: `latest`
+- Use **"If not present"** for predictable behavior
 
 ### Step 3.5: Container Environment Variables
 

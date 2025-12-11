@@ -81,8 +81,8 @@ exec /usr/local/bin/python3 -u src/scheduler.py\n\
 VOLUME ["/app/config", "/app/logs"]
 
 # Health check (ensure scheduler is running)
-HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
-    CMD pgrep -f scheduler.py || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=1m --retries=3 \
+    CMD pgrep -f "python.*scheduler" > /dev/null || exit 1
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
