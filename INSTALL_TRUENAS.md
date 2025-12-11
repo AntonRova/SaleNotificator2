@@ -330,19 +330,20 @@ Image Pull Policy: Always
 - Include the full path: `ghcr.io/antonrova/salenotificator2`
 - Tag is just: `latest`
 
-### Step 3.5: Set Environment Variables
+### Step 3.5: Container Environment Variables
 
 **Scroll down to "Container Environment Variables"**
 
-Click the **"Add"** button
+**IMPORTANT: Leave this section empty!**
 
-**Fill in:**
-```
-Environment Variable Name: TZ
-Environment Variable Value: America/New_York
-```
+**Do NOT add any environment variables.**
 
-(Change `America/New_York` to your timezone if different)
+The timezone is configured in your `config.json` file instead:
+```json
+"schedule": {
+  "timezone": "America/New_York"
+}
+```
 
 ### Step 3.6: Configure Storage Volumes
 

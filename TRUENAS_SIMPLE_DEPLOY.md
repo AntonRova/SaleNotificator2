@@ -165,13 +165,14 @@ Image Pull Policy: Always
 
 #### **Container Environment Variables**
 
-Click **Add** to add one variable:
+**Leave empty - do not add any environment variables.**
 
+Timezone is configured in your `config.json` file:
+```json
+"schedule": {
+  "timezone": "America/New_York"
+}
 ```
-Name: TZ
-Value: America/New_York
-```
-(Change to your timezone)
 
 #### **Storage - Host Path Volumes**
 
