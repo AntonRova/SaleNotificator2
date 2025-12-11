@@ -197,9 +197,11 @@ Mount Path: /app/logs
 
 ```
 ☑ Enable Resource Limits
-CPU Limit: 0.5
+CPU Limit: 1
 Memory Limit: 256 MiB
 ```
+
+**Note:** CPU limit must be a whole number (1, 2, etc.).
 
 #### **Advanced DNS Settings**
 
