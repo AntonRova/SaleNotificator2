@@ -165,13 +165,14 @@ Image Pull Policy: Always
 
 #### **Container Environment Variables**
 
-Click **Add** to add one variable:
+**Leave empty - do not add any environment variables.**
 
+Timezone is configured in your `config.json` file:
+```json
+"schedule": {
+  "timezone": "America/New_York"
+}
 ```
-Name: TZ
-Value: America/New_York
-```
-(Change to your timezone)
 
 #### **Storage - Host Path Volumes**
 
@@ -197,9 +198,11 @@ Mount Path: /app/logs
 
 ```
 ☑ Enable Resource Limits
-CPU Limit: 0.5
+CPU Limit: 1
 Memory Limit: 256 MiB
 ```
+
+**Note:** CPU limit must be a whole number (1, 2, etc.).
 
 #### **Advanced DNS Settings**
 
