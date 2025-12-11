@@ -29,14 +29,29 @@ There are two ways to deploy this application on TrueNAS:
      - `config` - for configuration files
      - `logs` - for application logs
 
-### Step 2: Create Configuration Files
+### Step 2: Create Configuration File
 
 1. Navigate to your dataset: `/mnt/your-pool/apps/sale-notificator/config/`
 
-2. Create `tracked_items.json`:
+2. Create `config.json`:
    ```json
    {
-     "items": [
+     "email": {
+       "smtp_server": "smtp.gmail.com",
+       "smtp_port": 587,
+       "sender_email": "your-email@gmail.com",
+       "sender_password": "your-app-password",
+       "recipient_email": "recipient@example.com",
+       "use_tls": true
+     },
+     "schedule": {
+       "enabled": true,
+       "cron": "0 * * * *",
+       "timezone": "America/New_York",
+       "run_on_startup": true,
+       "description": "Every hour at minute 0"
+     },
+     "tracked_items": [
        {
          "name": "Example Product",
          "url": "https://example.com/product",
@@ -50,26 +65,14 @@ There are two ways to deploy this application on TrueNAS:
    }
    ```
 
-3. Create `email_config.json`:
-   ```json
-   {
-     "smtp_server": "smtp.gmail.com",
-     "smtp_port": 587,
-     "sender_email": "your-email@gmail.com",
-     "sender_password": "your-app-password",
-     "recipient_email": "recipient@example.com",
-     "use_tls": true
-   }
-   ```
-
    **Note for Gmail users:**
    - Enable 2-factor authentication on your Google account
    - Generate an App Password: https://myaccount.google.com/apppasswords
    - Use the app password (not your regular password)
 
-4. Set proper permissions:
+3. Set proper permissions:
    ```bash
-   chmod 600 /mnt/your-pool/apps/sale-notificator/config/*.json
+   chmod 600 /mnt/your-pool/apps/sale-notificator/config/config.json
    ```
 
 ### Step 3: Build the Docker Image
@@ -302,13 +305,12 @@ docker exec sale-notificator python3 src/main.py
 
 ### Common Issues
 
-#### "Config files not found"
-- Verify files exist in `/mnt/your-pool/apps/sale-notificator/config/`
-- Check file names are exactly: `tracked_items.json` and `email_config.json`
+#### "Config file not found"
+- Verify `config.json` exists in `/mnt/your-pool/apps/sale-notificator/config/`
 - Verify volume mounts are correct
 
 #### "Email not sending"
-- Check SMTP credentials in `email_config.json`
+- Check SMTP credentials in the `email` section of `config.json`
 - For Gmail: Ensure you're using an App Password, not your account password
 - Verify `use_tls: true` is set
 - Check firewall allows outbound connection on port 587
@@ -367,9 +369,9 @@ docker exec sale-notificator python3 src/main.py
 
 ### Update Configuration
 
-Simply edit the JSON files in the config directory:
+Simply edit the config.json file:
 ```bash
-nano /mnt/your-pool/apps/sale-notificator/config/tracked_items.json
+nano /mnt/your-pool/apps/sale-notificator/config/config.json
 ```
 
 The changes will be picked up on the next scheduled run (no restart needed).

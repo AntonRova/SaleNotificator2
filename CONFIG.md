@@ -1,13 +1,10 @@
 # Configuration Guide
 
-SaleNotificator2 supports two configuration approaches:
+SaleNotificator2 uses a single `config.json` file for all settings.
 
-1. **Unified Config (Recommended)** - Single `config.json` file with all settings
-2. **Legacy Config** - Separate `tracked_items.json` and `email_config.json` files
+## Configuration (config.json)
 
-## Unified Config (config.json) - Recommended ✨
-
-The unified config approach combines email settings, tracked items, AND schedule configuration in a single file.
+The configuration file combines email settings, tracked items, and schedule configuration in a single file.
 
 **Key Benefits:**
 - ✅ Control the check schedule without rebuilding the Docker container
@@ -297,65 +294,6 @@ One of the key benefits of the unified config is that you can change the schedul
    ```
 
 **That's it!** No rebuild required.
-
----
-
-## Legacy Config (Backward Compatible)
-
-If you prefer the old approach or are migrating from a previous version, you can still use separate config files.
-
-### Files Required
-
-```
-config/tracked_items.json
-config/email_config.json
-```
-
-### tracked_items.json
-
-```json
-{
-  "items": [
-    {
-      "name": "Product Name",
-      "url": "https://example.com/product",
-      "parameter": "price",
-      "css_selector": ".price",
-      "threshold": 100.00,
-      "currency": "USD",
-      "enabled": true
-    }
-  ]
-}
-```
-
-### email_config.json
-
-```json
-{
-  "smtp_server": "smtp.gmail.com",
-  "smtp_port": 587,
-  "sender_email": "your_email@gmail.com",
-  "sender_password": "your_app_password",
-  "recipient_email": "recipient@example.com",
-  "use_tls": true
-}
-```
-
-### Limitations
-
-- **No schedule control** - Defaults to hourly checks (`0 * * * *`)
-- **Cannot change schedule** without environment variables or rebuilding
-- **Separate files** to manage
-
-### Migrating to Unified Config
-
-1. Create `config/config.json` based on the example above
-2. Copy your email settings from `email_config.json` to the `email` section
-3. Copy your items array from `tracked_items.json` to the `tracked_items` section
-4. Add a `schedule` section with your desired cron expression
-5. Remove or rename the old files (keep as backups)
-6. Restart the container
 
 ---
 

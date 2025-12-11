@@ -25,44 +25,17 @@ BASE_DIR = Path(__file__).parent.parent
 CONFIG_DIR = BASE_DIR / 'config'
 CONFIG_FILE = CONFIG_DIR / 'config.json'
 
-# Fallback to old config files if unified config doesn't exist
-EMAIL_CONFIG_FILE = CONFIG_DIR / 'email_config.json'
-TRACKED_ITEMS_FILE = CONFIG_DIR / 'tracked_items.json'
-
 
 def load_config() -> Dict:
-    """Load configuration from config.json or fallback to legacy files."""
+    """Load configuration from config.json."""
+    if not CONFIG_FILE.exists():
+        raise FileNotFoundError(
+            f"Configuration file not found: {CONFIG_FILE}\n"
+            f"Please create config.json based on config.example.json"
+        )
 
-    # Try unified config first
-    if CONFIG_FILE.exists():
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-
-    # Fallback to legacy config files
-    logging.warning("Unified config.json not found. Using legacy config files.")
-    logging.warning("Consider migrating to config.json for schedule configuration.")
-
-    config = {
-        "schedule": {
-            "enabled": True,
-            "cron": os.environ.get('CRON_SCHEDULE', '0 * * * *'),  # Default: hourly
-            "run_on_startup": True,
-            "description": "Fallback schedule from environment or default"
-        }
-    }
-
-    # Load email config if it exists
-    if EMAIL_CONFIG_FILE.exists():
-        with open(EMAIL_CONFIG_FILE, 'r', encoding='utf-8') as f:
-            config["email"] = json.load(f)
-
-    # Load tracked items if it exists
-    if TRACKED_ITEMS_FILE.exists():
-        with open(TRACKED_ITEMS_FILE, 'r', encoding='utf-8') as f:
-            tracked_data = json.load(f)
-            config["tracked_items"] = tracked_data.get("items", [])
-
-    return config
+    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
 def validate_cron_expression(cron_expr: str) -> bool:
@@ -149,7 +122,7 @@ def run_scheduler():
         logging.info("Visit https://crontab.guru for help")
         return 1
 
-    logging.info(f"Configuration loaded from: {CONFIG_FILE if CONFIG_FILE.exists() else 'legacy files'}")
+    logging.info(f"Configuration loaded from: {CONFIG_FILE}")
     logging.info(f"Schedule: {description}")
     logging.info(f"Cron expression: {cron_expr}")
     logging.info(f"Timezone: {timezone}")
