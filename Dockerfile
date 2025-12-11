@@ -14,11 +14,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 COPY config.py .
 
+# Copy example config files to templates directory
+COPY config/config.example.json /app/templates/
+COPY config/tracked_items.example.json /app/templates/
+
 # Create necessary directories
-RUN mkdir -p /app/config /app/logs && \
+RUN mkdir -p /app/config /app/logs /app/templates && \
     chmod 755 /app/logs
 
-# Create entrypoint script with config validation
+# Create entrypoint script with config validation and auto-deployment
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
@@ -26,6 +30,23 @@ echo "SaleNotificator2 Docker Container Starting..."\n\
 echo "Configuration directory: /app/config"\n\
 echo "Logs directory: /app/logs"\n\
 echo ""\n\
+\n\
+# Auto-deploy template config if no config exists\n\
+if [ ! -f "/app/config/config.json" ] && [ ! -f "/app/config/tracked_items.json" ]; then\n\
+    echo "No configuration found. Deploying template config files..."\n\
+    cp /app/templates/config.example.json /app/config/config.json\n\
+    cp /app/templates/tracked_items.example.json /app/config/tracked_items.json\n\
+    echo ""\n\
+    echo "✓ Template configuration files deployed to /app/config/"\n\
+    echo ""\n\
+    echo "IMPORTANT: Edit /app/config/config.json with your settings:"\n\
+    echo "  - Email SMTP settings"\n\
+    echo "  - Schedule (cron expression)"\n\
+    echo "  - Tracked items (products to monitor)"\n\
+    echo ""\n\
+    echo "After editing config, restart the container."\n\
+    echo ""\n\
+fi\n\
 \n\
 # Check if unified config exists\n\
 if [ -f "/app/config/config.json" ]; then\n\
