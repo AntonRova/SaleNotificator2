@@ -160,8 +160,15 @@ Version: 1.0.0
 ```
 Image Repository: ghcr.io/antonrova/salenotificator2
 Image Tag: latest
-Image Pull Policy: Always
+Image Pull Policy: If not present
 ```
+
+**Pull Policy Options:**
+- **If not present** (Recommended): Only download if image doesn't exist locally. Updates only when you manually trigger them.
+- **Always**: Auto-download latest image on every restart. Good for testing, but may cause unexpected updates.
+- **Never**: Never download, always use local cache.
+
+💡 **Recommendation:** Use **"If not present"** for stable operation. Update manually when ready.
 
 #### **Container Environment Variables**
 
@@ -349,15 +356,33 @@ Your price tracker is now running and will check prices at **9 AM and 5 PM** eve
 
 ### Update to Latest Version
 
-When there's a new version:
+When there's a new version available on GitHub:
 
+**Method 1: Manual Pull (Recommended)**
+```bash
+# In TrueNAS Shell
+docker pull ghcr.io/antonrova/salenotificator2:latest
+```
+
+Then restart the app:
+- **Apps** → **Installed** → `sale-notificator` → **Stop** → **Start**
+
+**Method 2: Using TrueNAS UI**
 1. Go to **Apps** → **Installed** → `sale-notificator`
-2. Click **Edit**
-3. Scroll to **Image Configuration**
-4. Change **Image Pull Policy** to `Always` (if not already)
-5. Click **Update**
+2. Click **Update** (if available)
 
-TrueNAS will pull the latest image from GitHub automatically!
+**Method 3: Force Pull via Edit**
+1. Click **Edit** on the app
+2. Change **Image Pull Policy** to `Always`
+3. Click **Save**
+4. App will auto-pull latest image on next restart
+5. *Optional:* Change back to `If not present` to prevent auto-updates
+
+**Understanding Auto-Updates:**
+- **`If not present`**: Updates ONLY when you manually trigger (stable, predictable)
+- **`Always`**: Auto-updates on EVERY restart (convenient but may surprise you)
+
+💡 Use **`If not present`** and manually update when ready!
 
 ---
 
