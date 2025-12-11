@@ -7,6 +7,7 @@ A Docker-based price tracking and notification system that monitors product pric
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://github.com/AntonRova/SaleNotificator2)
 [![TrueNAS](https://img.shields.io/badge/TrueNAS-compatible-green.svg)](TRUENAS_SIMPLE_DEPLOY.md)
 
+
 ---
 
 ## ⚠️ DISCLAIMER
