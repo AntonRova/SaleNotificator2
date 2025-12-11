@@ -82,7 +82,7 @@ VOLUME ["/app/config", "/app/logs"]
 
 # Health check (ensure scheduler is running)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=1m --retries=3 \
-    CMD pgrep -f "python.*scheduler" > /dev/null || exit 1
+    CMD ps aux | grep -q "[p]ython.*scheduler" || exit 1
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
