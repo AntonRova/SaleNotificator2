@@ -4,6 +4,11 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Install system dependencies (procps provides ps and pgrep for health checks)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends procps && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy requirements first for better caching
 COPY requirements.txt .
 
@@ -82,7 +87,7 @@ VOLUME ["/app/config", "/app/logs"]
 
 # Health check (ensure scheduler is running)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=1m --retries=3 \
-    CMD ps aux | grep -q "[p]ython.*scheduler" || exit 1
+    CMD pgrep -f "scheduler.py" > /dev/null || exit 1
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
